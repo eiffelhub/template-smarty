@@ -1,0 +1,54 @@
+note
+	description : "Objects that ..."
+	author      : "$Author: jfiat $"
+	date        : "$Date: 2010-06-11 09:18:42 +0200 (Fri, 11 Jun 2010) $"
+	revision    : "$Revision: 401 $"
+
+class
+	TEMPLATE_STRUCTURE_ACTION_NL2BR
+
+inherit
+	TEMPLATE_STRUCTURE_ACTION
+		redefine
+			process
+		end
+
+create {TEMPLATE_STRUCTURE_ACTION_FACTORY}
+	make
+
+feature -- Output
+
+	process
+		do
+			Precursor
+			process_nl2br
+		end
+
+feature {NONE} -- Implementation
+
+	process_nl2br
+		local
+			item_output: STRING
+			vn: STRING
+		do
+			item_output := foreach_iteration_string (inside_text, False)
+			item_output.replace_substring_all ("%R%N", "<br/>%N")
+			item_output.replace_substring_all ("%N", "<br/>%N")
+			if parameters.has (tab_param_id) then
+				vn := parameters.item (tab_param_id)
+				if vn /= Void and then vn.as_lower.is_equal (yes_value_id) then
+					item_output.replace_substring_all ("%T", "&nbsp;&nbsp;&nbsp;&nbsp;")
+				end
+			end
+
+			set_forced_output (item_output)
+		end
+
+note
+	copyright: "2011-2012, Jocelyn Fiat"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Jocelyn Fiat
+			Contact: http://about.jocelynfiat.net/
+		]"
+end
