@@ -55,9 +55,9 @@ feature -- Reset
 
 feature -- Values
 
-	values: STRING_TABLE [ANY]
+	values: STRING_TABLE [detachable ANY]
 
-	add_value (aval: ANY; aname: STRING)
+	add_value (aval: detachable ANY; aname: STRING)
 		do
 			values.force (aval, aname)
 		end

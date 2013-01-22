@@ -73,11 +73,23 @@ feature -- Values
 			values.force (aval, aname)
 		end
 
-feature -- Properties
+feature -- Access
 
 	name: detachable STRING
 
 	text: detachable STRING
+
+feature -- Change
+
+	set_name (v: like name)
+		do
+			name := v
+		end
+
+	set_text (v: like text)
+		do
+			text := v
+		end
 
 feature -- Get	
 
@@ -250,6 +262,7 @@ feature -- Get
 										str.same_string ("else")
 									then
 										current_item.add_indexes (s1, s2)
+										check wrapped_by_curly_braces_1: l_text.item (s1) = '{' and l_text.item (s2) = '}' end
 										struct_item := Void
 									else
 										act_item := action_item_from_string (str)
@@ -275,7 +288,13 @@ feature -- Get
 								is_scanning := False
 							end
 							if struct_item /= Void then
+								if l_text.item (s1) /= '{' then
+									if l_text.item (s1 + 1) = '{' then
+										s1 := s1 + 1
+									end
+								end
 								struct_item.add_indexes (s1, s2)
+								check wrapped_by_curly_braces_2: l_text.item (s1) = '{' and l_text.item (s2) = '}' end
 							end
 						end
 						if error and then error_message /= Void then
@@ -284,6 +303,7 @@ feature -- Get
 							end
 							create struct_item.make
 							struct_item.add_indexes (s1, s2)
+							check wrapped_by_curly_braces_3: l_text.item (s1) = '{' and l_text.item (s2) = '}' end
 							struct_item.set_name ("!error!")
 							struct_item.set_error_output ("{!! " + error_message + "!!}")
 							current_item.put_item_last (struct_item)
@@ -435,6 +455,13 @@ feature {TEMPLATE_COMMON} -- Implementation
 	structure_item: detachable TEMPLATE_STRUCTURE_ITEM
 			-- Id, VarName, start_index, end_index
 
+feature {TEMPLATE_COMMON} -- Implementation : change
+
+	set_structure_item (v: like structure_item)
+		do
+			structure_item := v
+		end
+
 feature {NONE} -- Impl
 
 	compiled_regexp (p: STRING; caseless: BOOLEAN): REGULAR_EXPRESSION
@@ -459,7 +486,8 @@ feature {NONE} -- Impl
 			p: STRING
 		once
 --			p := "\{(\/)?\s*((%"[^%"]*%"|[^/^}])+)\s*(\/)?\}"
-			p := "[\r\n]?\{(\/)?\s*((%"[^%"]*%"|[^/^}])+)\s*(\/)?\}" -- with CR
+--			p := "[\r\n]?\{(\/)?\s*((%"[^%"]*%"|[^/^}])+)\s*(\/)?\}" -- with CR
+			p := "\{(\/)?\s*((%"[^%"]*%"|[^/^}])+)\s*(\/)?\}"
 			Result := compiled_regexp (p, True)
 		end
 

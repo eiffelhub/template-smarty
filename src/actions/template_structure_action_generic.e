@@ -94,6 +94,15 @@ feature {NONE} -- Implementation
 			if parameters.has (file_param_id) then
 				vn := parameters.item (file_param_id)
 			end
+			if
+				parameters.has (literal_param_id) and then
+				attached parameters.item (literal_param_id) as l_id
+			then
+				is_literal := l_id.is_case_insensitive_equal ("true")
+			else
+				is_literal := False
+			end
+
 			if vn /= Void then
 				create p.make_from_string (vn)
 				if p.is_absolute then
@@ -101,6 +110,9 @@ feature {NONE} -- Implementation
 	 				p := tf.extended_path (p)
 				end
 			end
+
+			-- FIXME: one should optimize this part to reuse previous analyzes
+
 			if p /= Void then
 				create f.make_with_path (p)
 				if f.exists then
@@ -125,13 +137,9 @@ feature {NONE} -- Implementation
 			end
 
 			if t /= Void then
-				if
-					parameters.has (literal_param_id) and then
-					attached parameters.item (literal_param_id) as l_id
-				then
-					is_literal := l_id.is_case_insensitive_equal ("true")
-				else
-					is_literal := False
+				if t.ends_with ("%N") then
+					-- Removed final %N from the included file, if one really wants a final %N, be sure to add an empty line at the end
+					t.remove_tail (1)
 				end
 				if is_literal then
 					set_forced_output (t)

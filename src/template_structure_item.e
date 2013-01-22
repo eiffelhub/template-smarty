@@ -130,7 +130,11 @@ feature -- Expression
 				until
 					l_sp_exp.after
 				loop
-					tmp := resolved_expression (l_sp_exp.item)
+					if l_sp_exp.item.is_empty then
+						tmp := ""
+					else
+						tmp := resolved_expression (l_sp_exp.item)
+					end
 					if tmp = Void then
 						tmp := l_sp_exp.item
 					end
@@ -141,9 +145,9 @@ feature -- Expression
 					l_args.start
 					Result := l_args.first
 					if attached {STRING} Result as s1 then
-						str1 := s1.twin
-					else
-						Result := Void
+						str1 := s1.string
+					elseif Result /= Void then
+						str1 := Result.out
 					end
 					l_args.forth
 				until
@@ -151,22 +155,26 @@ feature -- Expression
 				loop
 					tmp := l_args.item
 					if attached {STRING} Result as s1 then
-						str1 := s1
+						str1 := s1.string
+					elseif Result /= Void then
+						str1 := Result.out
 					else
-						if Result /= Void then
-							str1 := Result.out
-						end
+						str1 := Void
 					end
-					if attached {STRING} tmp as s2 then
-						str2 := s2
-					else
-						if tmp /= Void then
-							str2 := tmp.out
+					if str1 /= Void then
+						if attached {STRING} tmp as s2 then
+							str2 := s2
+						else
+							if tmp /= Void then
+								str2 := tmp.out
+							end
 						end
-					end
-					if str1 /= Void and then str2 /= Void then
-						str1.append_string (str2)
-						Result := str1
+						if str2 /= Void then
+							str1.append_string (str2)
+							Result := str1
+						else
+							Result := Void
+						end
 					else
 						Result := Void
 					end

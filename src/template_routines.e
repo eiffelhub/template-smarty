@@ -19,7 +19,6 @@ feature
 		local
 			otn: STRING
 			obj_fields: detachable STRING_TABLE [INTEGER]
-			fdn_index: INTEGER
 		do
 			otn := type_name (obj)
 			if template_inspectors.has (otn) then
