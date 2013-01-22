@@ -37,12 +37,16 @@ feature {TEMPLATE_TEXT} -- Type
 			action_name /= Void
 		do
 			reset_type
-			if action_name.is_equal (if_op_id) then
-				is_if_action := True
-			elseif action_name.is_equal (if_unless_id) then
-				is_unless_action := True
-			elseif action_name.is_equal (include_op_id) then
-				is_include_action := True
+			if attached action_name as n then
+				if n.is_case_insensitive_equal_general (if_op_id) then
+					is_if_action := True
+				elseif n.is_case_insensitive_equal_general (if_unless_id) then
+					is_unless_action := True
+				elseif n.is_case_insensitive_equal_general (include_op_id) then
+					is_include_action := True
+				else
+					is_invalid_action := True
+				end
 			else
 				is_invalid_action := True
 			end
@@ -78,45 +82,54 @@ feature {NONE} -- Implementation
 		require
 			is_include_action
 		local
-			vn: STRING
-			f: KL_TEXT_INPUT_FILE
-			t: STRING
+			vn: detachable STRING
+			f: PLAIN_TEXT_FILE
+			t: detachable STRING
 			fc: INTEGER
-			fn: FILE_NAME
 			is_literal: BOOLEAN
 			templ_text: TEMPLATE_TEXT
+			p: detachable PATH
+			done: BOOLEAN
 		do
 			if parameters.has (file_param_id) then
 				vn := parameters.item (file_param_id)
 			end
-			if (create {KL_SHARED_FILE_SYSTEM}).file_system.is_absolute_pathname (vn) then
-			else
-				create fn.make_from_string (template_context.template_folder)
-				fn.set_file_name (vn)
-				vn := fn
-			end
 			if vn /= Void then
-				create f.make (vn)
+				create p.make_from_string (vn)
+				if p.is_absolute then
+	 			elseif attached template_context.template_folder as tf then
+	 				p := tf.extended_path (p)
+				end
+			end
+			if p /= Void then
+				create f.make_with_path (p)
 				if f.exists then
 					fc := f.count
-					if fc > 0 then
-						f.open_read
-						f.read_string (fc)
-						t := f.last_string
-						f.close
+					create t.make (fc)
+					f.open_read
+					from
+		--				done := False
+					until
+						done
+					loop
+						f.read_stream (1_024)
+						t.append (f.last_string)
+						done := f.last_string.count < 1_024 or f.exhausted
 					end
+					f.close
 				else
-					set_error_output ("{!! Missing include file " + vn + " !!}")
+					set_error_output ("{!! Missing include file " + p.utf_8_name + " !!}")
 				end
 			else
 				set_error_output ("{!! Invalid use of action include !!}")
 			end
 
 			if t /= Void then
-				if parameters.has (literal_param_id) then
-					vn := parameters.item (literal_param_id)
-					vn.to_lower
-					is_literal := vn.is_equal ("true")
+				if
+					parameters.has (literal_param_id) and then
+					attached parameters.item (literal_param_id) as l_id
+				then
+					is_literal := l_id.is_case_insensitive_equal ("true")
 				else
 					is_literal := False
 				end
@@ -145,14 +158,10 @@ feature {NONE} -- Implementation
 		require
 			is_if_action or is_unless_action
 		local
-			vn: STRING
+			vn: detachable STRING
 			cond_isset: BOOLEAN
 			cond_isempty: BOOLEAN
-			vv: ANY
-			vbool: BOOLEAN_REF
-			vstring: STRING
-			vcontainer: DS_CONTAINER [ANY]
-			vvout: STRING
+			vv: like resolved_expression
 			cond: BOOLEAN
 			item_output: STRING
 		do
@@ -181,25 +190,21 @@ feature {NONE} -- Implementation
 						cond := True
 					else
 						if cond_isempty then
-							vstring ?= vv
-							if vstring /= Void then
+							if attached {READABLE_STRING_GENERAL} vv as vstring then
 								cond := vstring.is_empty
 							else
-								vcontainer ?= vv
-								if vcontainer /= Void then
-									cond := vcontainer.is_empty
+								if attached {ITERABLE [detachable ANY]} vv as vcontainer then
+									cond := vcontainer.new_cursor.after -- i.e is_empty
 								else
 									cond := False
 								end
 							end
 						else
-							vbool ?= vv
-							if vbool /= Void then
+							if attached {BOOLEAN} vv as vbool then
 								cond := vbool.item
 							else
-								vvout := vv.out
-								vvout.to_lower
-								if vvout.is_equal ("true") then
+								check not_ref: not attached {BOOLEAN_REF} vv end
+								if vv.out.is_case_insensitive_equal_general ("true") then
 									cond := True
 								end
 							end

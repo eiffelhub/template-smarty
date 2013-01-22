@@ -15,7 +15,7 @@ inherit
 
 feature {NONE} -- Helpers
 
-	string_value (a: ANY): STRING
+	string_value (a: detachable ANY): detachable STRING
 		do
 			if a /= Void then
 				Result := a.out
@@ -23,6 +23,8 @@ feature {NONE} -- Helpers
 		end
 
 	resolved_variable_name (exp: STRING): STRING
+		require
+			exp_not_empty: not exp.is_empty
 		do
 			if exp.item (1).is_equal ('$') then
 				Result := exp.substring (2, exp.count)
@@ -31,23 +33,26 @@ feature {NONE} -- Helpers
 			end
 		end
 
-	resolved_formatted_variable (exp: STRING): ANY
+	resolved_formatted_variable (exp: STRING): detachable ANY
 			-- `e' should be "$var_name"
 			-- to improve .. later
 		local
 			l_var: STRING
 		do
-			l_var := resolved_variable_name (exp)
-			if template_context.runtime_values.has (l_var) then
-				Result := template_context.runtime_values.item (l_var)
-			elseif template_context.values.has (l_var) then
-				Result := template_context.values.item (l_var)
+			if attached template_context as tt then
+				l_var := resolved_variable_name (exp)
+				if tt.runtime_values.has (l_var) then
+					Result := tt.runtime_values.item (l_var)
+				elseif tt.values.has (l_var) then
+					Result := tt.values.item (l_var)
+				end
+
 			end
 		end
 
 feature {NONE} -- Nested and Internal
 
-	resolved_nested_message (obj: ANY; mesg: STRING): ANY
+	resolved_nested_message (obj: detachable ANY; mesg: STRING): detachable ANY
 			-- `e' should be "$var_name"
 			-- to improve .. later
 		do

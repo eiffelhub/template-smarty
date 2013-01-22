@@ -28,9 +28,9 @@ feature {NONE} -- Implementation
 
 	process_assign
 		local
-			vv: ANY
-			vn: STRING
-			ve: STRING
+			vv: detachable ANY
+			vn: detachable STRING
+			ve: detachable STRING
 		do
 			if parameters.has (name_param_id) then
 				vn := parameters.item (name_param_id)
@@ -39,7 +39,7 @@ feature {NONE} -- Implementation
 				vv := parameters.item (value_param_id)
 			elseif parameters.has (expression_param_id) then
 				ve := parameters.item (expression_param_id)
-				if ve.is_empty then
+				if ve = Void or else ve.is_empty then
 					vv := Void
 				else
 					vv := resolved_composed_expression (ve)

@@ -14,14 +14,16 @@ feature {NONE} -- Template context
 			create Result.make
 		end
 
-	template_custom_action_by_id (a_id: STRING): FUNCTION [ANY, TUPLE [STRING, DS_HASH_TABLE [STRING, STRING]], STRING]
+	template_custom_action_by_id (a_id: detachable STRING): detachable FUNCTION [ANY, TUPLE [STRING, STRING_TABLE [STRING]], STRING]
 		do
-			Result := template_context.template_custom_actions.item (a_id)
+			if a_id /= Void then
+				Result := template_context.template_custom_actions.item (a_id)
+			end
 		end
 
-	is_valid_template_custom_action_id (a_id: STRING): BOOLEAN
+	is_valid_template_custom_action_id (a_id: detachable STRING): BOOLEAN
 		do
-			Result := template_context.template_custom_actions.has (a_id)
+			Result := a_id /= Void and then template_context.template_custom_actions.has (a_id)
 		end
 
 note

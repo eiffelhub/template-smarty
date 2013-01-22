@@ -28,15 +28,13 @@ feature {NONE} -- Implementation
 
 	process_nl2br
 		local
-			item_output: STRING
-			vn: STRING
+			item_output: like foreach_iteration_string
 		do
 			item_output := foreach_iteration_string (inside_text, False)
 			item_output.replace_substring_all ("%R%N", "<br/>%N")
 			item_output.replace_substring_all ("%N", "<br/>%N")
 			if parameters.has (tab_param_id) then
-				vn := parameters.item (tab_param_id)
-				if vn /= Void and then vn.as_lower.is_equal (yes_value_id) then
+				if attached parameters.item (tab_param_id) as vn and then vn.is_case_insensitive_equal (yes_value_id) then
 					item_output.replace_substring_all ("%T", "&nbsp;&nbsp;&nbsp;&nbsp;")
 				end
 			end

@@ -28,29 +28,29 @@ feature -- Output
 		do
 			Precursor
 			if output = Void then
-				if variable_name /= Void then
-					if runtime_values.has (variable_name) then
-						output := string_value (runtime_values.item (variable_name))
-					elseif template_context.runtime_values.has (variable_name) then
-						output := string_value (template_context.runtime_values.item (variable_name))
-					elseif template_context.values.has (variable_name) then
-						output := string_value (template_context.values.item (variable_name))
+				if attached variable_name as vn then
+					if runtime_values.has (vn) then
+						output := string_value (runtime_values.item (vn))
+					elseif template_context.runtime_values.has (vn) then
+						output := string_value (template_context.runtime_values.item (vn))
+					elseif template_context.values.has (vn) then
+						output := string_value (template_context.values.item (vn))
 					else
-						output := "{!! Error = No value for " + variable_name + " variable !!}"
+						output := "{!! Error = No value for " + vn + " variable !!}"
 					end
-				elseif variable_expression /= Void then
-					output := string_value (resolved_expression (variable_expression))
+				elseif attached variable_expression as ve then
+					output := string_value (resolved_expression (ve))
 				end
 			end
 		end
 
 feature -- Access
 
-	variable_name: STRING
+	variable_name: detachable STRING
 
-	variable_expression: STRING
+	variable_expression: detachable STRING
 
-	forced_value: STRING
+	forced_value: detachable STRING
 
 feature -- Change
 

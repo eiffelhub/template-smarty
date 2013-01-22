@@ -49,9 +49,9 @@ feature -- Output
 
 feature -- Access
 
-	action_name: STRING
+	action_name: detachable STRING
 
-	parameters: DS_HASH_TABLE [STRING, STRING]
+	parameters: STRING_TABLE [STRING]
 
 feature -- Change
 
@@ -70,7 +70,12 @@ feature {NONE} -- Implementation
 
 	inside_text: STRING
 		do
-			Result := template_context.current_template_string.substring (end_index + 1, closing_start_index - 1)
+			if attached template_context.current_template_string as cts then
+				Result := cts.substring (end_index + 1, closing_start_index - 1)
+			else
+				create Result.make_empty
+				check has_inside_text: False end
+			end
 		end
 
 	foreach_iteration_string (on_text: STRING; reset_offset: BOOLEAN): STRING
@@ -79,21 +84,19 @@ feature {NONE} -- Implementation
 		local
 			s1, s2: INTEGER
 			t: TEMPLATE_STRUCTURE_ITEM
-			ta: TEMPLATE_STRUCTURE_ACTION
-			val: STRING
+			val: detachable STRING
 			soffset: INTEGER
 			item_output: STRING
 		do
-			from -- Loop Iteration
-				items.start
-				if not reset_offset then
-					soffset := 0 - end_index
-				end
-				item_output := on_text.twin
-			until
-				items.after
-			loop
-				t := items.item_for_iteration
+			if not reset_offset then
+				soffset := 0 - end_index
+			end
+			item_output := on_text.twin
+
+			across
+				items as c
+			loop -- Loop Iteration
+				t := c.item
 				s1 := t.start_index
 				s2 := t.end_index
 
@@ -104,8 +107,7 @@ feature {NONE} -- Implementation
 					val := ""
 				end
 
-				ta ?= t
-				if ta /= Void then
+				if attached {TEMPLATE_STRUCTURE_ACTION} t then
 					if t.has_closing_item then
 						s2 := t.closing_end_index
 					end
@@ -123,7 +125,6 @@ feature {NONE} -- Implementation
 						soffset := soffset - 1 - (s2 - s1)
 					end
 				end
-				items.forth
 			end -- end Loop Iteration
 			Result := item_output
 		end

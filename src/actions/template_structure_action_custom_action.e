@@ -31,11 +31,11 @@ feature {NONE} -- Implementation
 	process_custom_action
 		local
 			item_output: STRING
-			fct: like template_custom_action_by_id
 		do
---			template_custom_actions			
-			fct := template_custom_action_by_id (action_name)
-			if fct /= Void then
+--			template_custom_actions
+			if
+				attached template_custom_action_by_id (action_name) as fct
+			then
 				item_output := foreach_iteration_string (inside_text, False)
 				item_output := fct.item ([item_output, parameters])
 			else

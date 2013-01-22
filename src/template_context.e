@@ -15,7 +15,7 @@ feature
 	make
 		do
 			create runtime_values.make (10)
-			create archives.make
+			create archives.make (10)
 			create template_custom_actions.make (3)
 			template_custom_actions.compare_objects
 		end
@@ -30,29 +30,36 @@ feature
 			current_template_text := Void
 		end
 
-	runtime_values: DS_HASH_TABLE [ANY, STRING]
+	runtime_values: STRING_TABLE [detachable ANY]
 
-	current_template_text: TEMPLATE_TEXT
+	current_template_text: detachable TEMPLATE_TEXT
 
-	current_template_string: STRING
+	current_template_string: detachable STRING
 		do
-			Result := current_template_text.text
+			if attached current_template_text as ct then
+				Result := ct.text
+			end
 		end
 
-	values: DS_HASH_TABLE [ANY, STRING]
+	values: STRING_TABLE [detachable ANY]
 		require
 			current_template_text /= Void
 		do
-			Result := current_template_text.values
+			if attached current_template_text as ctt then
+				Result := ctt.values
+			else
+				check has_current_template_text: False end
+				create Result.make (0)
+			end
 		end
 
-	template_folder: STRING
+	template_folder: detachable PATH
 
 feature -- Backup
 
 	backup
 		do
-			archives.put_last ([current_template_text, runtime_values])
+			archives.force ([current_template_text, runtime_values])
 			runtime_values := runtime_values.deep_twin
 		end
 
@@ -65,10 +72,11 @@ feature -- Backup
 			b := archives.last
 			current_template_text := b.tpl_text
 			runtime_values := b.rt_values
-			archives.remove_last
+			archives.finish
+			archives.remove
 		end
 
-	archives: DS_LINKED_LIST [ TUPLE [like current_template_text, like runtime_values]]
+	archives: ARRAYED_LIST [TUPLE [like current_template_text, like runtime_values]]
 
 feature -- Change
 
@@ -82,7 +90,7 @@ feature -- Change
 			current_template_text := v
 		end
 
-	add_runtime_value (va: ANY; ks: STRING)
+	add_runtime_value (va: detachable ANY; ks: STRING)
 		do
 			runtime_values.force (va, ks)
 		end
@@ -92,14 +100,14 @@ feature -- Change
 			runtime_values.remove (ks)
 		end
 
-	add_value (va: ANY; ks: STRING)
+	add_value (va: detachable ANY; ks: READABLE_STRING_GENERAL)
 		require
 			current_template_text /= Void
 		do
 			values.force (va, ks)
 		end
 
-	remove_value (ks: STRING)
+	remove_value (ks: READABLE_STRING_GENERAL)
 		require
 			current_template_text /= Void
 		do
@@ -109,17 +117,11 @@ feature -- Change
 	append_values (v: like values)
 		require
 			current_template_text /= Void
-		local
-			c: DS_HASH_TABLE_CURSOR [ANY, STRING]
 		do
-			from
-				c := v.new_cursor
-				c.start
-			until
-				c.after
+			across
+				v as c
 			loop
 				add_value (c.item, c.key)
-				c.forth
 			end
 		end
 
@@ -127,7 +129,7 @@ feature -- Specific custom actions
 
 	template_custom_actions: HASH_TABLE [like template_custom_action_by_id, STRING]
 
-	template_custom_action_by_id (a_id: STRING): FUNCTION [ANY, TUPLE [STRING, DS_HASH_TABLE [STRING, STRING]], STRING]
+	template_custom_action_by_id (a_id: STRING): detachable FUNCTION [ANY, TUPLE [STRING, STRING_TABLE [STRING]], STRING]
 		do
 			Result := template_custom_actions.item (a_id)
 		end
@@ -148,7 +150,7 @@ feature -- Option
 
 feature -- Caching
 
-	Files: DS_HASH_TABLE [TEMPLATE_FILE , STRING]
+	Files: STRING_TABLE [TEMPLATE_FILE]
 		once
 			create Result.make (10)
 		end

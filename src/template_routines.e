@@ -12,35 +12,37 @@ inherit
 
 feature
 
-	internal_field_value (obj: ANY; fdn: STRING): ANY
+	internal_field_value (obj: ANY; fdn: STRING): detachable ANY
 		require
 			obj_not_void: obj /= Void
 			field_name_not_void: fdn /= Void
 		local
 			otn: STRING
-			obj_fields: DS_HASH_TABLE [INTEGER, STRING]
+			obj_fields: detachable STRING_TABLE [INTEGER]
 			fdn_index: INTEGER
-			tpl_inspector: TEMPLATE_INSPECTOR
 		do
 			otn := type_name (obj)
 			if template_inspectors.has (otn) then
-				tpl_inspector := Template_inspectors.item (otn)
-				tpl_inspector.set_object (obj)
-				Result := tpl_inspector.internal_data (fdn)
+				if attached Template_inspectors.item (otn) as tpl_inspector then
+					tpl_inspector.set_object (obj)
+					Result := tpl_inspector.internal_data (fdn)
+				end
 			else
 				if internal_info.has (otn) then
 					obj_fields := internal_info.item (otn)
 				else
 					obj_fields := internal_info_build (obj)
 				end
-				if obj_fields.has (fdn) then
-					fdn_index := obj_fields.item (fdn)
-					Result := field (fdn_index, obj)
+				if
+					obj_fields /= Void and then
+					obj_fields.has (fdn)
+				then
+					Result := field (obj_fields.item (fdn), obj)
 				end
 			end
 		end
 
-	internal_info_build (obj: ANY): DS_HASH_TABLE [INTEGER, STRING]
+	internal_info_build (obj: ANY): STRING_TABLE [INTEGER]
 		require
 			obj /= Void
 		local
@@ -63,7 +65,7 @@ feature
 			internal_info.force (Result, otn)
 		end
 
-	internal_info: DS_HASH_TABLE [DS_HASH_TABLE [INTEGER, STRING], STRING]
+	internal_info: STRING_TABLE [STRING_TABLE [INTEGER]]
 		once
 			create Result.make (10)
 		end
@@ -77,7 +79,7 @@ feature -- Inspectors
 			template_inspectors.force (ti, ti_name)
 		end
 
-	template_inspectors: DS_HASH_TABLE [TEMPLATE_INSPECTOR, STRING]
+	template_inspectors: STRING_TABLE [TEMPLATE_INSPECTOR]
 		once
 			create Result.make (10)
 		end
