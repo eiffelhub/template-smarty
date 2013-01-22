@@ -21,11 +21,12 @@ feature
 			obj_fields: detachable STRING_TABLE [INTEGER]
 		do
 			otn := type_name (obj)
-			if template_inspectors.has (otn) then
-				if attached Template_inspectors.item (otn) as tpl_inspector then
-					tpl_inspector.set_object (obj)
-					Result := tpl_inspector.internal_data (fdn)
-				end
+			if
+				template_inspectors.has (otn) and then
+				attached Template_inspectors.item (otn) as tpl_inspector and then
+				attached tpl_inspector.internal_data (fdn, obj) as cl -- If Void, this is not handled by tpl_inspector
+			then
+				Result := cl.item
 			else
 				if internal_info.has (otn) then
 					obj_fields := internal_info.item (otn)

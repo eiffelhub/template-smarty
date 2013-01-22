@@ -7,28 +7,24 @@ note
 deferred class
 	TEMPLATE_INSPECTOR
 
---create
---	default_create,
---	register
-
-feature
+feature -- Change
 
 	register (a_inspector_name: STRING)
 		do
 			Template_routines.register_template_inspector (Current, a_inspector_name)
 		end
 
-	set_object (obj: like object)
-		do
-			object := obj
-		end
-
-	object: ANY
-
 feature {TEMPLATE_ROUTINES}
 
-	internal_data (field_name: STRING): ANY
+	internal_data (field_name: STRING; object: detachable ANY): detachable CELL [detachable ANY]
+			-- Return object in a cell
+			-- If not handled by this inspector, return Void
 		deferred
+		end
+
+	cell_of (obj: detachable ANY): CELL [detachable ANY]
+		do
+			create Result.put (obj)
 		end
 
 feature -- Routine

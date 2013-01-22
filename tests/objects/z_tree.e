@@ -24,6 +24,11 @@ feature -- Access
 
 	name: STRING
 
+	title: STRING
+		do
+			Result := "Tree named %""+ name +"%""
+		end
+
 	nodes: LINKED_LIST [Z_TREE_NODE]
 
 	nodes_table: HASH_TABLE [Z_TREE_NODE, INTEGER]
