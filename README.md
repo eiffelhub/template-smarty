@@ -3,6 +3,7 @@
 - **Status**: NEED-IMPROVEMENT, NEED-CLEANING
 - **Goal**: build template library inspired by the php smarty template engine
 - **reference**: http://www.smarty.net/
+- **project**: https://github.com/eiffelhub/template-smarty
 
     copyright: "2011-2013, Jocelyn Fiat, Javier Velilla and EiffelSoftware"
     
