@@ -1,8 +1,8 @@
 note
 	description : "Objects that ..."
 	author      : "$Author: jfiat $"
-	date        : "$Date: 2010-06-11 09:18:42 +0200 (Fri, 11 Jun 2010) $"
-	revision    : "$Revision: 401 $"
+	date        : "$Date: 2013-12-10 15:51:27 +0100 (mar., 10 déc. 2013) $"
+	revision    : "$Revision: 93682 $"
 
 class
 	TEMPLATE_STRUCTURE_ACTION_FOREACH
@@ -53,7 +53,6 @@ feature {NONE} -- Implementation
 			lst_any: detachable ITERABLE [detachable ANY]
 			hsh_any_hashable: detachable TABLE_ITERABLE [detachable ANY, HASHABLE]
 			tmp_output: detachable STRING
-			gen_count: INTEGER
 		do
 --			template_context.backup
 			if parameters.has (key_param_id) then
@@ -68,13 +67,13 @@ feature {NONE} -- Implementation
 			then
 				vfrom := resolved_expression (sfrom)
 				if vfrom /= Void then
-					gen_count := Reflexion.generic_count (vfrom)
-					if gen_count = 2 then
-						hsh_any_hashable ?= vfrom
-					elseif gen_count = 1 then
-						if attached {ITERABLE [detachable ANY]} vfrom as lst then
-							lst_any := lst
-						end
+					hsh_any_hashable := Void
+					lst_any := Void
+					if attached {detachable TABLE_ITERABLE [detachable ANY, HASHABLE]} vfrom as l_ti then
+						hsh_any_hashable := l_ti
+					elseif attached {ITERABLE [detachable ANY]} vfrom as lst then
+						lst_any := lst
+					else
 					end
 				end
 			end

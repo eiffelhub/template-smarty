@@ -1,8 +1,8 @@
 note
 	description : "Objects that ..."
 	author      : "$Author: jfiat $"
-	date        : "$Date: 2010-06-11 09:18:42 +0200 (Fri, 11 Jun 2010) $"
-	revision    : "$Revision: 401 $"
+	date        : "$Date: 2013-12-17 11:07:46 +0100 (mar., 17 déc. 2013) $"
+	revision    : "$Revision: 93741 $"
 
 class
 	TEMPLATE_STRUCTURE_ACTION_HTMLENTITIES
@@ -30,10 +30,7 @@ feature {NONE} -- Implementation
 		local
 			item_output: STRING
 		do
-			item_output := foreach_iteration_string (inside_text, False)
-			item_output.replace_substring_all ("&", "&amp;")
-			item_output.replace_substring_all ("<", "&lt;")
-			item_output.replace_substring_all (">", "&gt;")
+			item_output := (create {HTML_ENCODER}).encoded_string (foreach_iteration_string (inside_text, False))
 			set_forced_output (item_output)
 		end
 
